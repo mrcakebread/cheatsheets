@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Wine Cheat Sheets · Arla</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { background: #100a06; color: #f0e8dc; font-family: 'DM Sans', 'Helvetica Neue', sans-serif; min-height: 100vh; overscroll-behavior: none; }
+  ::-webkit-scrollbar { display: none; }
+  input { outline: none; font-family: inherit; }
+  input::placeholder { color: rgba(240,232,220,0.25); }
+  button { font-family: inherit; cursor: pointer; }
+
+  #app { max-width: 430px; margin: 0 auto; }
+
+  /* Header */
+  #header {
+    padding: 52px 20px 16px;
+    position: sticky; top: 0;
+    background: linear-gradient(180deg, #100a06 70%, transparent 100%);
+    z-index: 50;
+  }
+  .header-label { font-size: 11px; letter-spacing: 3px; color: rgba(240,232,220,0.35); font-weight: 600; margin-bottom: 4px; }
+  .header-title { font-family: 'Playfair Display', Georgia, serif; font-size: 28px; font-weight: 700; color: #f0e8dc; margin-bottom: 16px; }
+
+  /* Search */
+  .search-wrap { position: relative; margin-bottom: 14px; }
+  .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 16px; opacity: 0.4; pointer-events: none; }
+  #search-input {
+    width: 100%;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 12px 14px 12px 42px;
+    color: #f0e8dc;
+    font-size: 15px;
+  }
+
+  /* Filters */
+  #filters { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+  .filter-btn {
+    flex-shrink: 0; padding: 7px 14px; border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: transparent; color: rgba(240,232,220,0.45);
+    font-size: 12px; font-weight: 500; letter-spacing: 0.3px;
+    transition: all 0.15s;
+  }
+  .filter-btn.active { font-weight: 700; }
+
+  /* Count */
+  #wine-count { padding: 4px 20px 12px; font-size: 12px; color: rgba(240,232,220,0.3); }
+
+  /* Wine list */
+  #wine-list { padding: 0 20px 80px; display: flex; flex-direction: column; gap: 10px; }
+  .wine-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 14px 16px;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 14px;
+    transition: background 0.15s;
+    -webkit-user-select: none; user-select: none;
+  }
+  .wine-card:active { background: rgba(255,255,255,0.09); }
+  .wine-emoji { font-size: 28px; min-width: 36px; text-align: center; }
+  .wine-info { flex: 1; min-width: 0; }
+  .wine-name { font-family: 'Playfair Display', Georgia, serif; font-size: 15px; color: #f0e8dc; font-weight: 600; line-height: 1.3; margin-bottom: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .wine-region { font-size: 12px; color: rgba(240,232,220,0.5); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .wine-flavors { font-size: 11px; margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; opacity: 0.85; }
+  .wine-cat-badge { font-size: 10px; background: rgba(255,255,255,0.06); border-radius: 20px; padding: 3px 8px; min-width: fit-content; font-weight: 600; letter-spacing: 0.3px; }
+
+  /* Empty */
+  .empty { text-align: center; padding: 60px 0; color: rgba(240,232,220,0.25); font-size: 15px; }
+
+  /* Overlay */
+  #overlay {
+    display: none; position: fixed; inset: 0; z-index: 100;
+    background: rgba(10,6,4,0.85); backdrop-filter: blur(4px);
+    align-items: flex-end;
+  }
+  #overlay.open { display: flex; }
+
+  #detail-sheet {
+    background: linear-gradient(170deg, #1c120e 0%, #150d08 100%);
+    border-radius: 20px 20px 0 0;
+    padding: 0 0 40px;
+    max-height: 88vh;
+    overflow-y: auto;
+    width: 100%;
+  }
+  .sheet-handle-wrap { display: flex; justify-content: center; padding: 10px; }
+  .sheet-handle { width: 36px; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.15); }
+  .sheet-header { padding: 8px 20px 20px; display: flex; align-items: flex-start; gap: 14px; }
+  .sheet-emoji { font-size: 42px; line-height: 1; }
+  .sheet-title-block { flex: 1; }
+  .sheet-title { font-family: 'Playfair Display', Georgia, serif; font-size: 22px; color: #f0e8dc; font-weight: 700; line-height: 1.25; margin-bottom: 4px; }
+  .sheet-producer { font-size: 13px; color: rgba(240,232,220,0.5); margin-bottom: 6px; }
+  .sheet-cat-badge { font-size: 11px; border-radius: 20px; padding: 3px 10px; font-weight: 700; letter-spacing: 0.5px; }
+
+  .sell-box { margin: 0 20px 20px; padding: 14px 16px; border-radius: 12px; }
+  .sell-label { font-size: 10px; font-weight: 700; letter-spacing: 1px; margin-bottom: 6px; }
+  .sell-text { font-size: 14px; color: #f0e8dc; line-height: 1.5; font-style: italic; }
+
+  .info-rows { padding: 0 20px; }
+  .info-row { display: flex; border-bottom: 1px solid rgba(255,255,255,0.06); padding: 11px 0; gap: 12px; align-items: flex-start; }
+  .info-label { font-size: 11px; color: rgba(240,232,220,0.4); font-weight: 700; letter-spacing: 0.8px; min-width: 80px; padding-top: 1px; }
+  .info-value { font-size: 14px; color: #f0e8dc; flex: 1; line-height: 1.4; }
+
+  .pairing-section { padding: 16px 20px 0; }
+  .pairing-label { font-size: 11px; color: rgba(240,232,220,0.4); font-weight: 700; letter-spacing: 0.8px; margin-bottom: 10px; }
+  .pairing-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+  .pairing-tag { font-size: 13px; background: rgba(255,255,255,0.06); color: #f0e8dc; border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 5px 12px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="header">
+    <div class="header-label">ARLA · WINE LIST</div>
+    <div class="header-title">Cheat Sheets</div>
+    <div class="search-wrap">
+      <div class="search-icon">🔍</div>
+      <input id="search-input" type="search" placeholder="Search wine, region, flavor, food..." autocomplete="off" autocorrect="off" spellcheck="false">
+    </div>
+    <div id="filters"></div>
+  </div>
+  <div id="wine-count"></div>
+  <div id="wine-list"></div>
+</div>
+
+<div id="overlay">
+  <div id="detail-sheet">
+    <div class="sheet-handle-wrap"><div class="sheet-handle"></div></div>
+    <div class="sheet-header">
+      <div class="sheet-emoji" id="d-emoji"></div>
+      <div class="sheet-title-block">
+        <div class="sheet-title" id="d-title"></div>
+        <div class="sheet-producer" id="d-producer"></div>
+        <span class="sheet-cat-badge" id="d-cat"></span>
+      </div>
+    </div>
+    <div class="sell-box" id="d-sell-box">
+      <div class="sell-label" id="d-sell-label">💬 SELL IT</div>
+      <div class="sell-text" id="d-pitch"></div>
+    </div>
+    <div class="info-rows" id="d-rows"></div>
+    <div class="pairing-section">
+      <div class="pairing-label">🍽️ FOOD PAIRING</div>
+      <div class="pairing-tags" id="d-pairings"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const wines = [
+  {id:1,emoji:"🥂",category:"Sparkling",name:"Domaine Carneros Brut Rosé",producer:"by Taittinger",region:"Carneros, CA",blend:"60% Pinot Noir, 40% Chardonnay",flavors:"watermelon, rose petals, mandarin, strawberries",body:"Medium bodied, creamy",acidity:"High",pitch:"Crafted in the manner of Champagne",pairing:"Charcuterie, sushi, shellfish platter",color:"#c47a8a"},
+  {id:2,emoji:"🥃",category:"Sherry",name:"Valdespino 'Tio Diego' Amontillado",region:"Jerez, Spain",flavors:"hazelnut, caramelized almond, dried apricot",body:"Medium-bodied, oxidative",acidity:"Medium",pitch:"Soaring complexity and depth, with a silkiness unique in its category",pairing:"Grilled meats, foie gras, aged cheeses",color:"#b5813a"},
+  {id:3,emoji:"🥃",category:"Sherry",name:"Lustau Amontillado",producer:"Palomino",region:"Jerez, Spain",flavors:"umami, leather, caramel, figs, dried citrus",body:"Medium-bodied, oxidative",acidity:"Moderate",pitch:"Aged longer than Fino — a bridge between dry and oxidative styles",pairing:"Mushroom dishes, grilled meats, aged cheeses",color:"#a07535"},
+  {id:4,emoji:"🥂",category:"Sparkling",name:"Raventós i Blanc 'Cuvée José'",producer:"Xarel·lo Based · 2019",region:"Penedès, Spain",flavors:"green apple, citrus peel, white flowers, brioche",body:"Light to medium-bodied",acidity:"High",pitch:"Top-tier Spanish sparkling — dry, crisp, complex with great minerality",pairing:"Shellfish, ceviche, fried foods",color:"#8aab6e"},
+  {id:5,emoji:"🥂",category:"Sparkling",name:"Collet Brut",blend:"50% Meunier, 30% Chard, 20% PN",region:"Champagne, France",flavors:"tea, quince, white peach, candied lemon",body:"Medium-bodied, elegant mousse",acidity:"High",pitch:"A boutique Champagne house offering serious value",pairing:"Caviar, seafood, fried foods",color:"#d4b86a"},
+  {id:6,emoji:"🍶",category:"Sake",name:"Yuho Junmai 'Eternal Embers'",region:"Ishikawa, Japan",flavors:"earthy, toasted rice, mushroom, soy",body:"Medium-bodied, umami driven",acidity:"High",pitch:"Bold flavors that stand up to meat dishes",pairing:"Grilled meats, soy-glazed dishes, cheese",color:"#7a9e8e"},
+  {id:7,emoji:"🍯",category:"Dessert/Sweet",name:"César Florido Moscatel Dorado",region:"Chipiona, Spain",flavors:"golden raisin, dried apricot, caramel",body:"Medium-bodied, sweet",acidity:"Medium",pitch:"A historic, artisan-made Moscatel with deep complexity",pairing:"Flan, marzipan pastry",color:"#c9902a"},
+  {id:8,emoji:"🥂",category:"Sherry",name:"Bodegas Alonso 'Velo Flor'",producer:"Manzanilla",region:"Sanlúcar de Barrameda, Spain",flavors:"sea spray, green olives, chamomile",body:"Light-bodied, bone-dry",acidity:"High, crisp, mouthwatering",pitch:"A rare, unfiltered Manzanilla — fresher and more intense",pairing:"Jamón Ibérico, seafood, fried appetizers",color:"#9dc4a0"},
+  {id:9,emoji:"🍇",category:"White",name:"Josep Grau 'Granit'",producer:"Garnacha Blanca",region:"Montsant, Spain",flavors:"white peach, pear, anise",body:"Medium-body",acidity:"Above moderate, vibrant",pitch:"Mediterranean climate balance of ripeness and minerality",pairing:"Grilled shrimp, oysters, scallops, white fish",color:"#b8c98a"},
+  {id:10,emoji:"🍷",category:"Red",name:"Alias (Baga) · 2019",region:"Bairrada, Portugal",flavors:"tart cherry, cranberry, leather, forest floor",body:"Medium, firm structure",acidity:"High, bright",pitch:"A rare old-world Portuguese red that drinks like Nebbiolo or Pinot Noir",pairing:"Shellfish, ceviche, fried foods",color:"#8b3a3a"},
+  {id:11,emoji:"🍷",category:"Red",name:"Charles Joguet Chinon 2021",producer:"Cabernet Franc",region:"Loire Valley, France",flavors:"red berries, green bell pepper, herbs",body:"Medium-bodied",acidity:"High",pitch:"Commitment to environmentally friendly viticulture",pairing:"Roasted poultry, pork, herb-infused dishes",color:"#7a4060"},
+  {id:12,emoji:"🍷",category:"White",name:"Selbach Saar Riesling Kabinett · 2022",region:"Mosel, Germany",flavors:"green apple, lime zest, white peach",body:"Light-bodied, balanced sweetness",acidity:"Medium",pitch:"Perfect for guests seeking fresh, low-alcohol white wine",pairing:"Spicy dishes, pork belly, foie gras",color:"#a8c4b0"},
+  {id:13,emoji:"🍷",category:"White",name:"Familia Torres 'Pazos das Bruxas' Albariño · 2023",region:"Rías Baixas, Spain",flavors:"grapefruit, orange blossom, sea spray",body:"Light to medium-bodied",acidity:"High",pitch:"For Sauvignon Blanc lovers who want to explore Spain",pairing:"Oysters, hamachi, ceviche",color:"#c0c870"},
+  {id:14,emoji:"🍷",category:"White",name:"Gaba do Xil 'O Barreiro'",producer:"Godello – Old Vines",region:"Valdeorras, Spain",flavors:"baked apple, honeydew, fennel",body:"Medium-body",acidity:"Above moderate, fresh",pitch:"Ideal for Chardonnay or White Burgundy drinkers wanting something unique",pairing:"Lamb, dry-aged steak, roasted mushrooms",color:"#b0b060"},
+  {id:15,emoji:"🍷",category:"White",name:"Nisia Verdejo · 2023 Old Vines",region:"Rueda, Spain",flavors:"pineapple, meyer lemon, passionfruit",body:"Medium, firm structure",acidity:"High, bright",pitch:"A richer style of Spanish white, great for white wine lovers",pairing:"Grilled fish, poultry, vegetable dishes",color:"#d4c060"},
+  {id:16,emoji:"🌸",category:"Rosé",name:"Bodegas Cepa Hito Rosado · 2021",region:"Ribera del Duero, Spain",flavors:"strawberry, raspberry, watermelon",body:"Medium-bodied",acidity:"Medium, refreshing",pitch:"For guests wanting a rosé with more structure and depth",pairing:"Grilled meats, octopus, poke",color:"#d47890"},
+  {id:17,emoji:"🧈",category:"White",name:"ZD Chardonnay · 2022",region:"California, USA",flavors:"apple, lemon zest, butter",body:"Full",acidity:"Medium",pitch:"ZD Wines committed to sustainability and eco-friendly practices",pairing:"Grilled seafood, chicken, soft cheeses",color:"#d4b060"},
+  {id:18,emoji:"🍷",category:"Red",name:"Roco 'Gravel Road' Pinot Noir · 2021",region:"Willamette Valley, USA",flavors:"cherry, pomegranate, baking spice",body:"Medium bodied",acidity:"Medium-high",pitch:"Perfect for Burgundy-style Pinot Noir lovers",pairing:"Salmon, duck, roasted chicken",color:"#a05060"},
+  {id:19,emoji:"🍷",category:"Red",name:"Textura 'Pretexto' (Mencia Based) · 2020",region:"Dão, Portugal",flavors:"blackberry, violets, white pepper",body:"Medium to full",acidity:"Elevated",pitch:"A fantastic example of Portugal's rising quality in red wines",pairing:"Grilled meat, stews, charcuterie",color:"#6a3a70"},
+  {id:20,emoji:"🍷",category:"Red",name:"Bodegas Bernabeleva 'Navaherreros'",producer:"Garnacha",region:"Madrid, Spain",flavors:"red berries, wild strawberries, dried flowers",body:"Medium-body",acidity:"Above moderate, fresh",pitch:"A beautiful, delicate Garnacha for Pinot Noir lovers",pairing:"Tapas, grilled veggies, meats",color:"#b04060"},
+  {id:21,emoji:"🍷",category:"Red",name:"Viña Sastre Tempranillo · 2018",region:"Ribera del Duero, Spain",flavors:"plum, dark chocolate, blackberry",body:"Full",acidity:"Medium",pitch:"A bold, rich, full-bodied Spanish red",pairing:"Ibérico ham, wagyu, grilled vegetables",color:"#7a2a2a"},
+  {id:22,emoji:"🍷",category:"Red",name:"Costers del Priorat 'Pissarres' · 2019",producer:"Samso Based",region:"Priorat, Spain",flavors:"black cherry, violets, licorice",body:"Full",acidity:"Medium plus",pitch:"Grown in Priorat's famous slate soils — distinct mineral edge",pairing:"Grilled meats, manchego, charcuterie",color:"#5a2050"},
+  {id:23,emoji:"🍷",category:"Red",name:"Turnbull Cabernet Sauvignon · 2021",region:"Napa Valley, USA",flavors:"cassis, plum, dark chocolate",body:"Full, rich",acidity:"Medium",pitch:"Aged in high quality French oak — adds depth and structure",pairing:"Wagyu, lamb, hearty stews",color:"#4a1a1a"},
+  {id:24,emoji:"🍋",category:"White",name:"Pascal Jolivet 'Attitude' Sauvignon Blanc · 2022",region:"Loire Valley, France",flavors:"grapefruit zest, gooseberry, flint",body:"Light bodied",acidity:"Very High",pitch:"More refined than NZ Sauvignon Blanc — flinty minerality",pairing:"Oysters, ceviche, grilled fish",color:"#c8d860"},
+  {id:25,emoji:"🍏",category:"White",name:"Matias Michelini 'Tiro al Blanco' Chenin Blanc · 2020",region:"Argentina",flavors:"yellow apple, quince, pear",body:"Medium to full",acidity:"Elevated",pitch:"Minimal intervention, expressing pure terroir — sustainably made",pairing:"Grilled seafood, pork, creamy dishes",color:"#b8c860"},
+  {id:26,emoji:"🍏",category:"White",name:"Famille Vincent Bourgogne Chardonnay · 2022",region:"Burgundy, France",flavors:"ripe pear, green apple, almond",body:"Medium-body",acidity:"Medium plus",pitch:"Fresher and lighter than Napa Chardonnay",pairing:"Lobster, roast chicken, seared scallops",color:"#c8c070"},
+  {id:27,emoji:"🌸",category:"Rosé",name:"Ostatu Rosado · 2023",blend:"Tempranillo/Grenache",region:"Rioja Alavesa, Spain",flavors:"watermelon, wild strawberries, floral",body:"Light",acidity:"High, crisp",pitch:"More structure and fruit expression than Provence Rosé",pairing:"Ibérico ham, grilled shrimp, roasted vegetables",color:"#e07888"},
+  {id:28,emoji:"🌸",category:"Rosé",name:"Flowers Rosé (100% Pinot Noir)",region:"Sonoma Coast, CA",flavors:"pink grapefruit, rose petals, wild strawberry",body:"Medium",acidity:"High",pitch:"More depth and structure than most Rosés",pairing:"Salmon, seared tuna, roasted chicken, charcuterie",color:"#e090a0"},
+  {id:29,emoji:"🍷",category:"Red",name:"Lindes de Remelluri · 2019",producer:"Tempranillo",region:"Rioja, Spain",flavors:"red cherries, violets, balsamic",body:"Medium",acidity:"Medium",pitch:"Harmonious blend of fruit and spice",pairing:"Lamb chops, beef steaks, cured cheeses",color:"#903050"},
+];
+
+const CATEGORIES = ["All","Sparkling","White","Rosé","Red","Sherry","Sake","Dessert/Sweet"];
+const CAT_COLORS = {Sparkling:"#d4b86a",White:"#c8c870","Rosé":"#e090a0",Red:"#a04050",Sherry:"#b07840",Sake:"#7a9e8e","Dessert/Sweet":"#c9902a",All:"#8a7060"};
+
+let currentCategory = "All";
+let currentSearch = "";
+let currentWine = null;
+
+function getFiltered() {
+  const q = currentSearch.toLowerCase();
+  return wines.filter(w => {
+    const matchCat = currentCategory === "All" || w.category === currentCategory;
+    const matchSearch = !q ||
+      w.name.toLowerCase().includes(q) ||
+      (w.region||"").toLowerCase().includes(q) ||
+      w.flavors.toLowerCase().includes(q) ||
+      w.pairing.toLowerCase().includes(q) ||
+      (w.producer||"").toLowerCase().includes(q);
+    return matchCat && matchSearch;
+  });
+}
+
+function renderFilters() {
+  const el = document.getElementById("filters");
+  el.innerHTML = CATEGORIES.map(cat => {
+    const col = CAT_COLORS[cat];
+    const active = currentCategory === cat;
+    return `<button class="filter-btn${active?" active":""}" data-cat="${cat}"
+      style="${active ? `border-color:${col};background:${col}22;color:${col};` : ""}"
+    >${cat}</button>`;
+  }).join("");
+  el.querySelectorAll(".filter-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      currentCategory = btn.dataset.cat;
+      renderFilters();
+      renderList();
+    });
+  });
+}
+
+function renderList() {
+  const filtered = getFiltered();
+  const el = document.getElementById("wine-list");
+  document.getElementById("wine-count").textContent = `${filtered.length} wine${filtered.length!==1?"s":""}`;
+  if (!filtered.length) {
+    el.innerHTML = `<div class="empty">No wines found</div>`;
+    return;
+  }
+  el.innerHTML = filtered.map(w => `
+    <div class="wine-card" data-id="${w.id}" style="border-left:3px solid ${w.color}">
+      <div class="wine-emoji">${w.emoji}</div>
+      <div class="wine-info">
+        <div class="wine-name">${w.name}</div>
+        <div class="wine-region">${w.region||""}</div>
+        <div class="wine-flavors" style="color:${w.color}">${w.flavors}</div>
+      </div>
+      <div class="wine-cat-badge" style="background:${w.color}22;color:${w.color};border:1px solid ${w.color}44">${w.category}</div>
+    </div>
+  `).join("");
+  el.querySelectorAll(".wine-card").forEach(card => {
+    card.addEventListener("click", () => {
+      const wine = wines.find(w => w.id == card.dataset.id);
+      openDetail(wine);
+    });
+  });
+}
+
+function openDetail(wine) {
+  currentWine = wine;
+  document.getElementById("d-emoji").textContent = wine.emoji;
+  document.getElementById("d-title").textContent = wine.name;
+  const prod = document.getElementById("d-producer");
+  prod.textContent = wine.producer || "";
+  prod.style.display = wine.producer ? "block" : "none";
+  const cat = document.getElementById("d-cat");
+  cat.textContent = wine.category;
+  cat.style.background = `${wine.color}22`;
+  cat.style.color = wine.color;
+  cat.style.border = `1px solid ${wine.color}55`;
+
+  const sellBox = document.getElementById("d-sell-box");
+  sellBox.style.background = `${wine.color}18`;
+  sellBox.style.border = `1px solid ${wine.color}33`;
+  sellBox.style.borderLeft = `3px solid ${wine.color}`;
+  document.getElementById("d-sell-label").style.color = wine.color;
+  document.getElementById("d-pitch").textContent = `"${wine.pitch}"`;
+
+  const rows = [
+    {label:"REGION", value:wine.region},
+    wine.blend && {label:"BLEND", value:wine.blend},
+    wine.producer && {label:"STYLE", value:wine.producer},
+    {label:"FLAVORS", value:wine.flavors},
+    {label:"BODY", value:wine.body},
+    {label:"ACIDITY", value:wine.acidity},
+  ].filter(Boolean);
+
+  document.getElementById("d-rows").innerHTML = rows.map(r => `
+    <div class="info-row">
+      <div class="info-label">${r.label}</div>
+      <div class="info-value">${r.value}</div>
+    </div>
+  `).join("");
+
+  document.getElementById("d-pairings").innerHTML = wine.pairing.split(", ").map(p =>
+    `<span class="pairing-tag">${p}</span>`
+  ).join("");
+
+  document.getElementById("detail-sheet").style.borderTop = `2px solid ${wine.color}`;
+  document.getElementById("overlay").classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+
+function closeDetail() {
+  document.getElementById("overlay").classList.remove("open");
+  document.body.style.overflow = "";
+  currentWine = null;
+}
+
+document.getElementById("overlay").addEventListener("click", function(e) {
+  if (e.target === this) closeDetail();
+});
+
+document.getElementById("search-input").addEventListener("input", function() {
+  currentSearch = this.value;
+  renderList();
+});
+
+// Swipe down to close
+let touchStartY = 0;
+document.getElementById("detail-sheet").addEventListener("touchstart", e => { touchStartY = e.touches[0].clientY; }, {passive:true});
+document.getElementById("detail-sheet").addEventListener("touchend", e => {
+  const diff = e.changedTouches[0].clientY - touchStartY;
+  if (diff > 80) closeDetail();
+}, {passive:true});
+
+renderFilters();
+renderList();
+</script>
+</body>
+</html>
